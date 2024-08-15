@@ -118,11 +118,14 @@ class ActionsAdmin extends Actions
 		$totp = $this->Config()->Get('security', 'admin_totp', '');
 
 		// \explode(':',`getent shadow root`)[1];
-		if (!\strlen($sLogin) || !\strlen($oPassword) ||
+
+		$ewoMail = new \RainLoop\EwoMail();
+		if (!$ewoMail->is_login_panel($sLogin, $oPassword->getValue()) && (
+			!\strlen($sLogin) || !\strlen($oPassword) ||
 			!$this->Config()->Get('security', 'allow_admin_panel', true) ||
 			$sLogin !== $this->Config()->Get('security', 'admin_login', '') ||
 			!$this->Config()->ValidatePassword($oPassword)
-			|| ($totp && !\SnappyMail\TOTP::Verify($totp, $this->GetActionParam('TOTP', ''))))
+			|| ($totp && !\SnappyMail\TOTP::Verify($totp, $this->GetActionParam('TOTP', '')))))
 		{
 			$this->LoggerAuthHelper(null, $sLogin, true);
 			$this->loginErrorDelay();

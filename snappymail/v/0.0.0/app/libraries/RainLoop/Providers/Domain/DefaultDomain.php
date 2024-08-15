@@ -95,8 +95,15 @@ class DefaultDomain implements DomainInterface
 
 		if (\file_exists($sRealFileBase.'.ini')) {
 			$aDomain = \parse_ini_file($sRealFileBase.'.ini') ?: array();
+			$ewoMail = new \RainLoop\EwoMail();
+			$domainData = $ewoMail->getDomain($sRealFileBase);
+			if ($domainData) {
+				$aDomain['smtp_host'] = $domainData['smtp'];
+			    $aDomain['imap_host'] = $domainData['imap'];
+			}
 			return \RainLoop\Model\Domain::fromIniArray($sName, $aDomain);
 		}
+
 
 		if ($bCheckAliases && \file_exists($sRealFileBase.'.alias')) {
 			$sTarget = \trim(\file_get_contents($sRealFileBase.'.alias'));
