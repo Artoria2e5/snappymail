@@ -94,14 +94,22 @@ class ServiceActions
 				throw new Exceptions\ClientException(Notifications::InvalidInputArgument, null, 'Action unknown');
 			}
 
-			$token = Utils::GetCsrfToken();
-			if (isset($_SERVER['HTTP_X_SM_TOKEN'])) {
-				if ($_SERVER['HTTP_X_SM_TOKEN'] !== $token) {
-					throw new Exceptions\ClientException(Notifications::InvalidToken, null, 'HTTP Token mismatch');
-				}
-			} else if ($this->oHttp->IsPost()) {
-				if (empty($_POST['XToken']) || $_POST['XToken'] !== $token) {
-					throw new Exceptions\ClientException(Notifications::InvalidToken, null, 'XToken Token mismatch');
+			if ('Logout' !== $sAction) {
+				$token = Utils::GetCsrfToken();
+				if (isset($_SERVER['HTTP_X_SM_TOKEN'])) {
+					if ($_SERVER['HTTP_X_SM_TOKEN'] !== $token) {
+						$oAccount = $this->oActions->getAccountFromToken(false);
+						$sEmail = $oAccount ? $oAccount->Email() : 'guest';
+						$this->oActions->logWrite("{$_SERVER['HTTP_X_SM_TOKEN']} !== {$token} for {$sEmail}", \LOG_ERROR, 'Token');
+						throw new Exceptions\ClientException(Notifications::InvalidToken, null, 'HTTP Token mismatch');
+					}
+				} else if ($this->oHttp->IsPost()) {
+					if (empty($_POST['XToken']) || $_POST['XToken'] !== $token) {
+						$oAccount = $this->oActions->getAccountFromToken(false);
+						$sEmail = $oAccount ? $oAccount->Email() : 'guest';
+						$this->oActions->logWrite("{$_POST['XToken']} !== {$token} for {$sEmail}", \LOG_ERROR, 'XToken');
+						throw new Exceptions\ClientException(Notifications::InvalidToken, null, 'XToken mismatch');
+					}
 				}
 			}
 

@@ -213,6 +213,13 @@ class Actions
 				case 'suggestions':
 					$mResult = [];
 					break;
+/*				// See function Cacher
+				case 'cache':
+					$mResult = new \MailSo\Cache\Drivers\File(
+						\trim($this->oConfig->Get('cache', 'path', '')) ?: APP_PRIVATE_DATA . 'cache'
+					);
+					break;
+*/
 			}
 		}
 
@@ -460,6 +467,9 @@ class Actions
 		return $this->oDomainProvider;
 	}
 
+	/**
+	 * bForceFile is only used by admin session token
+	 */
 	public function Cacher(?Model\Account $oAccount = null, bool $bForceFile = false): \MailSo\Cache\CacheClient
 	{
 		$sKey = '';
@@ -481,7 +491,6 @@ class Actions
 					\trim($this->oConfig->Get('cache', 'path', '')) ?: APP_PRIVATE_DATA . 'cache'
 				);
 			}
-//			$sDriver = \strtoupper(\trim($this->oConfig->Get('cache', 'fast_cache_driver', 'files')));
 			$oDriver->setPrefix($sKey);
 
 			$this->aCachers[$sIndexKey]->SetDriver($oDriver);
@@ -737,6 +746,7 @@ class Actions
 			$aResult['proxyExternalImages'] = (bool)$oConfig->Get('labs', 'use_local_proxy_for_external_images', false);
 			$aResult['autoVerifySignatures'] = (bool)$oConfig->Get('security', 'auto_verify_signatures', false);
 			$aResult['allowLanguagesOnSettings'] = (bool) $oConfig->Get('webmail', 'allow_languages_on_settings', true);
+			$aResult['minRefreshInterval'] = (int) $oConfig->Get('webmail', 'min_refresh_interval', 5);
 			$aResult['Capa'] = $this->Capa($bAdmin, $oAccount);
 			$value = \ini_get('upload_max_filesize');
 			$upload_max_filesize = \intval($value);
@@ -828,7 +838,7 @@ class Actions
 			$sError = Enumerations\UploadError::getUserMessage($iError, $iClientError);
 
 			if (!empty($sError)) {
-				$aResponse['ErrorCode'] = $iClientError;
+				$aResponse['code'] = $iClientError;
 				$aResponse['Error'] = $sError;
 			}
 		}

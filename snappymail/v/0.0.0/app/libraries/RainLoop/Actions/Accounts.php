@@ -184,6 +184,7 @@ trait Accounts
 			$bReload = false;
 			$oAccount = $this->getAccountFromToken();
 			if ($oAccount instanceof AdditionalAccount && $oAccount->Email() === $sEmailToDelete) {
+//				$this->SetAdditionalAuthToken(null);
 				\SnappyMail\Cookies::clear(self::AUTH_ADDITIONAL_TOKEN_KEY);
 				$bReload = true;
 			}
@@ -200,6 +201,7 @@ trait Accounts
 	public function getAccountData(Account $oAccount): array
 	{
 		$oConfig = $this->Config();
+		$minRefreshInterval = (int) $oConfig->Get('webmail', 'min_refresh_interval', 5);
 		$aResult = [
 //			'Email' => IDN::emailToUtf8($oAccount->Email()),
 			'Email' => $oAccount->Email(),
@@ -213,7 +215,7 @@ trait Accounts
 			'HideDeleted' => true,
 			'ShowUnreadCount' => false,
 			'UnhideKolabFolders' => false,
-			'CheckMailInterval' => 15
+			'CheckMailInterval' => \max(15, $minRefreshInterval)
 		];
 		$oSettingsLocal = $this->SettingsProvider(true)->Load($oAccount);
 		if ($oSettingsLocal instanceof \RainLoop\Settings) {
@@ -229,7 +231,7 @@ trait Accounts
 			$aResult['HideDeleted'] = (bool)$oSettingsLocal->GetConf('HideDeleted', $aResult['HideDeleted']);
 			$aResult['ShowUnreadCount'] = (bool)$oSettingsLocal->GetConf('ShowUnreadCount', $aResult['ShowUnreadCount']);
 			$aResult['UnhideKolabFolders'] = (bool)$oSettingsLocal->GetConf('UnhideKolabFolders', $aResult['UnhideKolabFolders']);
-			$aResult['CheckMailInterval'] = (int)$oSettingsLocal->GetConf('CheckMailInterval', $aResult['CheckMailInterval']);
+			$aResult['CheckMailInterval'] = \max((int) $oSettingsLocal->GetConf('CheckMailInterval', $aResult['CheckMailInterval']), $minRefreshInterval);
 /*
 			foreach ($oSettingsLocal->toArray() as $key => $value) {
 				$aResult[\lcfirst($key)] = $value;
